@@ -31,6 +31,7 @@ class DMPLayer(LayerBase):
     def packet_data(self):
         packet = bytearray()
         # packet length
+        print len(self.data)
         packet.extend(length_as_low12(10 + 1 + len(self.data)))
         # vector
         packet.append(0x02)
@@ -52,9 +53,10 @@ class DMPLayer(LayerBase):
         return 10 + 1 + len(self.data)
 
 class FramingLayer(LayerBase):
-    def __init__(self, dmp_packet=None, universe=1, name='lumos', priority=100, sequence=0):
+    def __init__(self, dmp_packet=None, universe=1, name=None, priority=100, sequence=0):
         self.universe = universe
-        self.name = name.rjust(64)
+        name = name or 'lumos'
+        self.name = name.ljust(64)
         self.priority = priority
         self.sequence = sequence
         self.dmp_packet = dmp_packet
@@ -62,6 +64,8 @@ class FramingLayer(LayerBase):
     def packet_data(self):
         packet = bytearray()
         packet.extend(length_as_low12(77 + len(self.dmp_packet)))
+        print 'self.dmp_packet'
+        print len(self.dmp_packet)
         # vector
         packet.extend('\x00\x00\x00\x02')
         packet.extend(self.name)
@@ -89,6 +93,7 @@ class RootLayer(LayerBase):
         packet.extend('ASC-E1.17\x00\x00\x00')
         # pdu size starts after byte 16 - there are 38 bytes of data in root layer
         # so size is 38 - 16 + framing layer
+        print len(self.framing_packet)
         packet.extend(length_as_low12(38 - 16 + len(self.framing_packet)))
         # vector
         packet.extend('\x00\x00\x00\x04')
