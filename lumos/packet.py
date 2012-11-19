@@ -2,6 +2,7 @@
 This module defines the packet structures sent over E1.31
 """
 
+import struct
 import uuid
 
 default_cid = uuid.uuid1().bytes
@@ -31,7 +32,6 @@ class DMPLayer(LayerBase):
     def packet_data(self):
         packet = bytearray()
         # packet length
-        print len(self.data)
         packet.extend(length_as_low12(10 + 1 + len(self.data)))
         # vector
         packet.append(0x02)
@@ -56,7 +56,7 @@ class FramingLayer(LayerBase):
     def __init__(self, dmp_packet=None, universe=1, name=None, priority=100, sequence=0):
         self.universe = universe
         name = name or 'lumos'
-        self.name = name.ljust(64)
+        self.name = name
         self.priority = priority
         self.sequence = sequence
         self.dmp_packet = dmp_packet
@@ -64,18 +64,18 @@ class FramingLayer(LayerBase):
     def packet_data(self):
         packet = bytearray()
         packet.extend(length_as_low12(77 + len(self.dmp_packet)))
-        print 'self.dmp_packet'
-        print len(self.dmp_packet)
         # vector
         packet.extend('\x00\x00\x00\x02')
-        packet.extend(self.name)
+        packet.extend(struct.pack('!64s', self.name))
         packet.append(self.priority)
         # reserved by spec
         packet.extend('\x00\x00')
         packet.append(self.sequence)
         # options
         packet.append('\x00')
-        packet.append(self.universe)
+        # universe
+        packet.extend(struct.pack('!h', self.universe))
+        packet.extend(self.dmp_packet)
         return packet
 
 
@@ -93,11 +93,11 @@ class RootLayer(LayerBase):
         packet.extend('ASC-E1.17\x00\x00\x00')
         # pdu size starts after byte 16 - there are 38 bytes of data in root layer
         # so size is 38 - 16 + framing layer
-        print len(self.framing_packet)
         packet.extend(length_as_low12(38 - 16 + len(self.framing_packet)))
         # vector
         packet.extend('\x00\x00\x00\x04')
         packet.extend(self.cid)
+        packet.extend(self.framing_packet)
         return packet
 
 
@@ -106,6 +106,5 @@ class E131Packet(object):
         self.dmp_packet = DMPLayer(data=data).packet_data()
         self.framing_packet = FramingLayer(name=name, universe=universe,
                 dmp_packet=self.dmp_packet).packet_data()
-        self.root_packet = RootLayer(cid=cid, framing_packet=self.framing_packet).packet_data()
-        self.packet = self.root_packet + self.framing_packet + self.dmp_packet
+        self.packet_data = RootLayer(cid=cid, framing_packet=self.framing_packet).packet_data()
 
