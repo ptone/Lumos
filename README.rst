@@ -23,3 +23,8 @@ The entirety of the current functionality is exposed through a single class::
     data = [255] * 50
 
     source.send_data(data)
+
+For a far more complete tool see the `OLA project`_ - but for smaller, more
+portable projects, this library may be all you need.
+
+.. _`OLA project`: http://opendmx.net/index.php/OLA
