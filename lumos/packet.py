@@ -102,9 +102,9 @@ class RootLayer(LayerBase):
 
 
 class E131Packet(object):
-    def __init__(self, cid=None, name=None, universe=None, data=[]):
+    def __init__(self, cid=None, name=None, universe=None, data=[], sequence=0):
         self.dmp_packet = DMPLayer(data=data).packet_data()
         self.framing_packet = FramingLayer(name=name, universe=universe,
-                dmp_packet=self.dmp_packet).packet_data()
+                dmp_packet=self.dmp_packet, sequence=sequence).packet_data()
         self.packet_data = RootLayer(cid=cid, framing_packet=self.framing_packet).packet_data()
 
